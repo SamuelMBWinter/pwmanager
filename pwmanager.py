@@ -57,12 +57,14 @@ class Safe:
         )
         return self.cursor.fetchall()
 
-Acc1 = Account("service1", "samuelmbwinter", "A very strong password")
+if __name__ == "__main__":
+        
+    Acc1 = Account("service1", "samuelmbwinter", "A very strong password")
 
-db_path = ":memory:"
+    db_path = ":memory:"
 
-with Safe(db_path) as pwds:
-    pwds.add_acc(Acc1) 
-    pwds.cursor.execute("SELECT * FROM pwds WHERE service='service1'")
-    print(pwds.retrieve_acc(service="service1"))
-    
+    with Safe(db_path) as pwds:
+        pwds.add_acc(Acc1) 
+        pwds.cursor.execute("SELECT * FROM pwds WHERE service='service1'")
+        print(pwds.retrieve_acc(service="service1"))
+        
