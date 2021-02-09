@@ -1,4 +1,7 @@
+# Database, Cryptographically secure random number generation, and hashing functions
 import sqlite3
+import secrets
+import base64
 
 # Creating an `Account` class to store the data associated with an account
 class Account:
@@ -8,8 +11,16 @@ class Account:
         self.pwd = password
         self.email = email
         self.url = url
-
+    def attrs(self):
+        return [
+        self.service,
+        self.usr,
+        self.pwd,
+        self.email,
+        self.url,
+        ]
 # SQLite3 `Safe` class to manage the data base - this helps remove biolerplate code
+# This class will have the safe storage of the pass words built in.
 class Safe:
     def __init__(self, path):
         self.path = path
@@ -38,11 +49,11 @@ class Safe:
             INSERT INTO pwds VALUES (:ser, :usr, :pwd, :email, :url)
             """,
             {
-                'ser': Acc1.service,
-                'usr': Acc1.usr,
-                'pwd': Acc1.pwd,
-                'email': Acc1.email,
-                'url': Acc1.url,
+                'ser': account.service,
+                'usr': account.usr,
+                'pwd': account.pwd,
+                'email': account.email,
+                'url': account.url,
             }
         )
     
@@ -55,7 +66,19 @@ class Safe:
                 'username': username,
             }
         )
-        return self.cursor.fetchall()
+        db_ls = self.cursor.fetchall()
+        acc_ls = []
+        for entry in db_ls:
+            acc_ls.append(
+                Account(
+                    entry[0],
+                    entry[1],
+                    entry[2],
+                    entry[3],
+                    entry[4],
+                )
+            )
+        return acc_ls
 
 if __name__ == "__main__":
         
@@ -66,5 +89,5 @@ if __name__ == "__main__":
     with Safe(db_path) as pwds:
         pwds.add_acc(Acc1) 
         pwds.cursor.execute("SELECT * FROM pwds WHERE service='service1'")
-        print(pwds.retrieve_acc(service="service1"))
+        print(pwds.retrieve_acc(service="service1")[0].attrs())
         
