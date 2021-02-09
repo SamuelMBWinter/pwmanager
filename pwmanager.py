@@ -2,15 +2,21 @@
 import sqlite3
 import secrets
 import base64
+import os
+
+# Secret key for safe salting of passwords
+secret_key = os.environ.get("SECRET_KEY")
+master_pwd = os.environ.get("DB_PWD")
 
 # Creating an `Account` class to store the data associated with an account
 class Account:
-    def __init__(self, service, username, password, email = None, url = None):
+    def __init__(self, service, username, email = None, url = None, password=None,):
         self.service = service
         self.usr = username
-        self.pwd = password
         self.email = email
         self.url = url
+        self.pwd = password
+    
     def attrs(self):
         return [
         self.service,
@@ -19,6 +25,7 @@ class Account:
         self.email,
         self.url,
         ]
+
 # SQLite3 `Safe` class to manage the data base - this helps remove biolerplate code
 # This class will have the safe storage of the pass words built in.
 class Safe:
@@ -32,9 +39,9 @@ class Safe:
             CREATE TABLE pwds(
             service text,
             username text,
-            password text,
             email text,
-            url text
+            url text,
+            password text
             )
         """)
         
@@ -45,15 +52,19 @@ class Safe:
         self.connection.close()
 
     def add_acc(self, account):
+        # This is where the magic happens
+        salt = secret_key + account.service
+        account.pwd = salt
+        
         self.cursor.execute("""
-            INSERT INTO pwds VALUES (:ser, :usr, :pwd, :email, :url)
+            INSERT INTO pwds VALUES (:ser, :usr, :email, :url, :pwd)
             """,
             {
                 'ser': account.service,
                 'usr': account.usr,
-                'pwd': account.pwd,
                 'email': account.email,
                 'url': account.url,
+                'pwd': account.pwd,
             }
         )
     
@@ -82,7 +93,7 @@ class Safe:
 
 if __name__ == "__main__":
         
-    Acc1 = Account("service1", "samuelmbwinter", "A very strong password")
+    Acc1 = Account("service1", "samuelmbwinter")
 
     db_path = ":memory:"
 
