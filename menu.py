@@ -1,58 +1,55 @@
 import pwmanager as pwm
-import getpass
+import pyperclip
 
 def display_prompt(option="h"):
     if option == "h":
-        print("""
-------------------------------
-Welcome to the PWManager
-h - Home      | a - Add
-r - Retrieve  | q - Quit
-------------------------------
-        """)
-
+        title = "Menu"
+        print('')
+        print("--<" + title + ">" + "-" * (31- len(title)))
+        print("h - Home Menu")
+        print("a - Add account")
+        print("r - Retrieve account data and password")
+        print("q - Quit")
+        print("-" * 35)
+   
     elif option == "a":
-        print("""
-------------------------------
-Add a new account
-- A service name and username, 
-are required
-- Email and URL are optional
-> <service> <username> <email> <url>
-------------------------------
-        """)
+        title = "Add"
+        print('')
+        print("--<" + title + ">" + "-" * (31- len(title)))
+        print("To add an account the service and username are required")
+        print("<service> <username> [<email>] [<url>]")
+        print("-" * 35)
+   
     elif option == "r":
-                print("""
-------------------------------
-Retrieve a password
-- Use the service name to retrieve a password
-> <service>
-------------------------------
-        """)
+        title = "Retrieve"
+        print('')
+        print("--<" + title + ">" + "-" * (31- len(title)))
+        print("To retrieve account data, enter the name of ther service")
+        print("<service>")
+        print("-" * 35)
+   
     else:
-        print("""
-------------------------------
-Something has gone missing!
-------------------------------
-        """)
+        title = "Error"
+        print('')
+        print("--<" + title + ">" + "-" * (31- len(title)))
+        print("Something has gone wrong here!")
+        print("-" * 35)
         display_prompt("h")
 
-def db_add(acc_str):
+def db_add(acc_str, length):
     acc = pwm.Account(*acc_str.split())
-    pwds.add_acc(acc)
+    pwds.add_acc(acc, length)
 
 def db_ret(ser_str):
-    acc_ls = pwds.retrieve_acc(service=ser_str)
-    for acc in acc_ls:
-        print(*acc.attrs())
+    acc = pwds.retrieve_acc(service=ser_str)
+    return acc.attrs()
 
 db_path = ":memory:"
 
 user = "h"
-display_prompt(user)
-
 
 with pwm.Safe(db_path) as pwds:
+    display_prompt(user)
     while True:
         user = input(": ")
         display_prompt(user)
@@ -63,17 +60,22 @@ with pwm.Safe(db_path) as pwds:
         elif user == "a":
             while user == "a":
                 acc_str = input("> ")
-                db_add(acc_str)
+                print("How many characters in the password?")
+                length = int(input("> "))
+                db_add(acc_str, length)
                 print("'a' to add another, else go home")
                 user = input("> ")
             display_prompt("h")
+        
         elif user == "r":
             while user == "r":
                 service_str = input("> ")
-                db_ret(service_str)
+                acc_ls = db_ret(service_str)
+                print(*acc_ls[:-1])
+                pyperclip.copy(acc_ls[-1])
                 print("'r' to retrieve another, else go home")
                 user = input("> ")
-            display_promt("h")
+            display_prompt("h")
         
         else:
             continue
@@ -83,4 +85,4 @@ with pwm.Safe(db_path) as pwds:
                      
             
 
-            
+
