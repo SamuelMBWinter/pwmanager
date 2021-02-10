@@ -40,8 +40,8 @@ class Safe:
     # check user knows the master password
     def __enter__(self):
         print(enter_prompt)
-        self.master_pass = getpass.getpass(": ")
-        if sha256(self.master_pass.encode('utf-8') + secret_key).hexdigest() == master_pwd:
+        
+        if self.check_master():
             self.connection = sqlite3.connect(self.path)
             self.cursor = self.connection.cursor()
             self.cursor.execute("""
@@ -62,6 +62,13 @@ class Safe:
         self.cursor.close()
         self.connection.close()
     
+    def check_master(self):
+        self.master_pass = getpass.getpass(": ")
+        if sha256(self.master_pass.encode('utf-8') + secret_key).hexdigest() == master_pwd:
+            return True
+        else:
+            return False
+    
     def add_acc(self, account, length):
         word = self.make_pwd_seed(length)
         self.cursor.execute("""
@@ -75,7 +82,9 @@ class Safe:
                 'pwd': word,
             }
         )
-             
+        pwd = self.make_pwd_out(word)
+        return pwd
+
     def retrieve_acc(self, service=None, username=None):
         self.cursor.execute("""
             SELECT * FROM pwds WHERE service=:service OR username=:username
@@ -105,7 +114,6 @@ class Safe:
     def make_pwd_out(self, seed):
         hsh = sha256(seed.encode('utf8') + self.master_pass.encode('utf8') + secret_key[:20]).hexdigest()
         ints = [(int(hsh[i : i+2], 16)) for i in range(0, len(hsh), 2)]
-        print(*ints)
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTYVWXYZ0123456789(,._-*~"<>|!@#$%^&)'
         word = ""
         for i in range(len(seed)):
