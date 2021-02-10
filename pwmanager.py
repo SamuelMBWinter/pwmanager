@@ -1,4 +1,4 @@
-#Database, Cryptographically secure random number generation, and hashing functions
+# Database, Cryptographically secure random number generation, and hashing functions
 import sqlite3
 import base64
 import os
@@ -40,7 +40,8 @@ class Safe:
     # check user knows the master password
     def __enter__(self):
         print(enter_prompt)
-        if sha256(getpass.getpass(": ").encode('utf-8') + secret_key).hexdigest() == master_pwd:
+        self.master_pass = getpass.getpass(": ")
+        if sha256(self.master_pass.encode('utf-8') + secret_key).hexdigest() == master_pwd:
             self.connection = sqlite3.connect(self.path)
             self.cursor = self.connection.cursor()
             self.cursor.execute("""
@@ -62,7 +63,7 @@ class Safe:
         self.connection.close()
     
     def add_acc(self, account, length):
-        word = self.make_pwd(length)
+        word = self.make_pwd_seed(length)
         self.cursor.execute("""
             INSERT INTO pwds VALUES (:ser, :usr, :email, :url, :pwd)
             """,
@@ -90,13 +91,23 @@ class Safe:
             entry[1],
             entry[2],
             entry[3],
-            entry[4],
         )
-        return acc
+        pwd = self.make_pwd_out(entry[4]) 
+        return acc, pwd
 
-    def make_pwd(self, length):
+    def make_pwd_seed(self, length):
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTYVWXYZ0123456789(,._-*~"<>|!@#$%^&)'
         word = ""
         while len(word) < length:
             word += secrets.choice(chars)
         return word   
+    
+    def make_pwd_out(self, seed):
+        hsh = sha256(seed.encode('utf8') + self.master_pass.encode('utf8') + secret_key[:20]).hexdigest()
+        ints = [(int(hsh[i : i+2], 16)) for i in range(0, len(hsh), 2)]
+        print(*ints)
+        chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTYVWXYZ0123456789(,._-*~"<>|!@#$%^&)'
+        word = ""
+        for i in range(len(seed)):
+            word += chars[ints[i] % (len(chars))] 
+        return  word
