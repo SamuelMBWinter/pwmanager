@@ -45,7 +45,7 @@ class Safe:
             self.connection = sqlite3.connect(self.path)
             self.cursor = self.connection.cursor()
             self.cursor.execute("""
-                CREATE TABLE pwds(
+                CREATE TABLE IF NOT EXISTS pwds(
                 service text,
                 username text,
                 email text,
@@ -53,13 +53,13 @@ class Safe:
                 password text
                 )
             """)
-        
             return self
         else:
             raise NotImplementedError("Incorrect Password")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.cursor.close()
+        self.connection.commit()
         self.connection.close()
     
     def check_master(self):
@@ -103,6 +103,13 @@ class Safe:
         )
         pwd = self.make_pwd_out(entry[4]) 
         return acc, pwd
+    
+    def list_acc(self):
+        self.cursor.execute("""
+            SELECT * FROM pwds
+        """)
+        entries = self.cursor.fetchall()
+        return entries
 
     def make_pwd_seed(self, length):
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTYVWXYZ0123456789(,._-*~"<>|!@#$%^&)'

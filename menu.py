@@ -49,7 +49,19 @@ def menu_ret():
     print("Go to")
     option = input(": ")
     return option
-    
+
+def menu_list():
+    title = "List"
+    print('')
+    print("--<" + title + ">" + "-" * (31- len(title)))
+    print("Here is a list of the accounts")
+    print("-" * 35)
+    for entry in pwds.list_acc():
+        print(*entry)
+    print("Go to")
+    option = input(": ")
+    return option
+
 def menu_error():
     title = "Error"
     print('')
@@ -60,7 +72,7 @@ def menu_error():
     menu_home()
 
 
-db_path = ":memory:"
+db_path = "/home/samwinter/.config/pypwdman/pwds.db"
 
 option = 'h'
 
@@ -74,6 +86,9 @@ with pwm.Safe(db_path) as pwds:
 
         elif option in ["r", "retrieve"]:
             option = menu_ret()
+
+        elif option in ["l", "list"]:
+            option = menu_list()
 
         elif option in ["q", "quit"]:
             break
