@@ -22,11 +22,11 @@ class Account:
     
     def attrs(self):
         return [
-        self.service,
-        self.usr,
-        self.email,
-        self.url,
-        self.pwd
+		self.service,
+		self.usr,
+		self.email,
+		self.url,
+		self.pwd
         ]
 
 # SQLite3 `Safe` class to manage the data base - this helps remove biolerplate code
